@@ -109,6 +109,11 @@
 //! # }
 //! ```
 //!
+extern crate thiserror;
+
+#[cfg(windows)]
+extern crate windows;
+
 #[cfg(feature = "stream")]
 extern crate futures;
 

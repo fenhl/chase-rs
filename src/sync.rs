@@ -4,6 +4,7 @@ use data::*;
 use control::*;
 use errors::ChaseError;
 
+use std::convert::TryInto as _;
 use std::io::{self, BufReader, SeekFrom};
 use std::io::prelude::*;
 use std::fs::File;
@@ -12,6 +13,25 @@ use std::time::Duration;
 
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
+
+#[cfg(windows)] use {
+    std::{
+        ffi::c_void,
+        mem::{
+            self,
+            MaybeUninit,
+        },
+        os::windows::io::AsRawHandle as _,
+    },
+    windows::Win32::{
+        Foundation::HANDLE,
+        Storage::FileSystem::{
+            FILE_ID_INFO,
+            FileIdInfo,
+            GetFileInformationByHandleEx,
+        },
+    },
+};
 
 impl Chaser {
     /// Start chasing a file synchronously.
@@ -115,7 +135,7 @@ where
             let bytes_read = running.reader.read_line(&mut running.buffer)?;
             if bytes_read > 0 {
                 let control = f(
-                    running.buffer.trim_right_matches('\n'),
+                    running.buffer.trim_end_matches('\n'),
                     running.line,
                     running.pos,
                 )?;
@@ -203,6 +223,24 @@ where
 fn get_file_id(file: &File) -> Result<FileId, io::Error> {
     let meta = file.metadata()?;
     Ok(FileId(meta.ino()))
+}
+
+#[cfg(windows)]
+fn get_file_id(file: &File) -> Result<FileId, io::Error> {
+    let mut file_id_info = MaybeUninit::uninit();
+    // SAFETY: GetFileInformationByHandleEx does not specify safety criteria
+    unsafe {
+        GetFileInformationByHandleEx(
+            HANDLE(file.as_raw_handle() as isize),
+            FileIdInfo,
+            file_id_info.as_mut_ptr() as *mut c_void,
+            mem::size_of::<FILE_ID_INFO>().try_into().unwrap(),
+        )?;
+    }
+    // SAFETY: file_id_info is initialized by GetFileInformationByHandleEx
+    unsafe {
+        Ok(FileId(file_id_info.assume_init()))
+    }
 }
 
 enum RotationStatus {

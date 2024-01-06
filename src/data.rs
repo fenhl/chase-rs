@@ -6,6 +6,8 @@ use std::time::Duration;
 
 use std::path::PathBuf;
 
+#[cfg(windows)] use windows::Win32::Storage::FileSystem::FILE_ID_INFO;
+
 pub const DEFAULT_ROTATION_CHECK_WAIT_MILLIS: u64 = 100;
 pub const DEFAULT_NOT_ROTATED_WAIT_MILLIS: u64 = 50;
 
@@ -17,9 +19,14 @@ pub struct Line(pub usize);
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub struct Pos(pub u64);
 
+#[cfg(unix)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub(crate) struct FileId(pub(crate) u64);
+
+#[cfg(windows)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) struct FileId(pub(crate) FILE_ID_INFO);
 
 /// Your entry point for following a file.
 #[derive(Debug, Clone)]
