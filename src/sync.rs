@@ -37,11 +37,11 @@ impl Chaser {
     where
         F: FnMut(&str) -> Result<(), crate::Error>,
     {
-        let (file, file_id) = try_until::<_, crate::Error, _>(|| {
+        let (file, file_id) = try_until_success::<_, crate::Error>(|| {
             let file = File::open(&self.path)?;
             let file_id = get_file_id(&file)?;
             Ok((file, file_id))
-        })?;
+        });
         // Create a BufReader and skip to the proper line number while
         // keeping track of byte-position
         let mut reader = BufReader::new(file);
@@ -93,7 +93,7 @@ where
         if grabbing_remainder {
             break 'reading;
         } else {
-            let rotation_status = try_until(|| check_rotation_status(running))?;
+            let rotation_status = try_until_success(|| check_rotation_status(running));
             match rotation_status {
                 RotationStatus::Rotated {
                     file: new_file,
@@ -129,19 +129,12 @@ fn check_rotation_status(running: &mut Chasing<'_>) -> Result<RotationStatus, io
 }
 
 // Will go at least once, max attempts set to None means try until successful
-fn try_until<R, E, F>(
-    mut f: F,
-) -> Result<R, E>
-where
-    F: FnMut() -> Result<R, E>,
-{
+fn try_until_success<T, E>(mut f: impl FnMut() -> Result<T, E>) -> T {
     loop {
-        let current_try = f();
-        if current_try.is_err() {
-            sleep(DEFAULT_ROTATION_CHECK_WAIT);
-            continue
+        if let Ok(value) = f() {
+            break value
         } else {
-            return current_try
+            sleep(DEFAULT_ROTATION_CHECK_WAIT);
         }
     }
 }
