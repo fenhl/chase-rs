@@ -10,6 +10,7 @@ documentation = "https://docs.rs/chase"
 repository = "https://github.com/lloydmeta/chase-rs"
 keywords = ["chase", "logs", "tail", "log-tailing", "file-watch"]
 readme = "README.md"
+edition = "2018"
 
 [[bin]]
 name = "chase"

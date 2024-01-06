@@ -1,15 +1,15 @@
 //! Holds logic for following a file asynchronously using standard
 //! channels from the standard lib.
 
-use data::*;
-use control::*;
+use crate::data::*;
+use crate::control::*;
 
 use super::{thread_namer, SendData};
 
 use std::sync::mpsc::*;
 use std::thread::{Builder, JoinHandle};
 
-use errors::ChaseError;
+use crate::errors::ChaseError;
 
 impl Chaser {
     /// Consumes the given chaser and gives you back a standard lib Channel to read

@@ -122,7 +122,7 @@ extern crate tempdir;
 
 mod data;
 mod sync;
-mod async;
+mod r#async;
 mod errors;
 mod control;
 
@@ -130,9 +130,9 @@ mod control;
 #[cfg_attr(feature = "with-serde", macro_use)]
 extern crate serde_derive;
 
-pub use data::{Chaser, Line, Pos, DEFAULT_NOT_ROTATED_WAIT_MILLIS,
+pub use crate::data::{Chaser, Line, Pos, DEFAULT_NOT_ROTATED_WAIT_MILLIS,
                DEFAULT_ROTATION_CHECK_WAIT_MILLIS};
 
-pub use errors::ChaseError;
+pub use crate::errors::ChaseError;
 
-pub use control::Control;
+pub use crate::control::Control;

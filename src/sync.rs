@@ -1,8 +1,8 @@
 //! Holds a synchronous implementation of file following.
 
-use data::*;
-use control::*;
-use errors::ChaseError;
+use crate::data::*;
+use crate::control::*;
+use crate::errors::ChaseError;
 
 use std::convert::TryInto as _;
 use std::io::{self, BufReader, SeekFrom};
@@ -251,9 +251,9 @@ enum RotationStatus {
 #[cfg(test)]
 mod tests {
 
-    use sync::try_until;
-    use data::*;
-    use control::*;
+    use crate::sync::try_until;
+    use crate::data::*;
+    use crate::control::*;
     use tempdir::*;
     use std::io::Write;
 

@@ -8,7 +8,7 @@ use std::sync::mpsc as channel_mpsc;
 use futures::sync::mpsc as stream_mpsc;
 
 use std::error::Error;
-use async::SendData;
+use crate::r#async::SendData;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ChaseError {
