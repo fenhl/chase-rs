@@ -1,13 +1,29 @@
-use crate::data::*;
-use crate::control::*;
+use {
+    std::{
+        path::PathBuf,
+        thread::{
+            Builder,
+            JoinHandle,
+        },
+    },
+    futures::{
+        Future,
+        Sink,
+        sync::mpsc::*,
+    },
+    crate::{
+        data::*,
+        control::*,
+        errors::ChaseError,
+    },
+};
 
-use super::thread_namer;
-
-use std::thread::{Builder, JoinHandle};
-use futures::{Future, Sink};
-use futures::sync::mpsc::*;
-
-use crate::errors::ChaseError;
+fn thread_namer(path: &PathBuf) -> String {
+    format!(
+        "chase-thread-{}",
+        path.to_str().unwrap_or("undisplayable-path")
+    )
+}
 
 impl Chaser {
     pub fn run_stream(
