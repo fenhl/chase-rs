@@ -4,7 +4,6 @@ use crate::data::*;
 use crate::control::*;
 use crate::errors::ChaseError;
 
-use std::convert::TryInto as _;
 use std::io::{self, BufReader, SeekFrom};
 use std::io::prelude::*;
 use std::fs::File;
