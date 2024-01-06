@@ -1,8 +1,8 @@
 //! Holds an implementation of file following as a Futures Stream, with back-pressure
 //! taken into consideration.
 
-use data::*;
-use control::*;
+use crate::data::*;
+use crate::control::*;
 
 use super::{thread_namer, SendData};
 
@@ -10,7 +10,7 @@ use std::thread::{Builder, JoinHandle};
 use futures::{Future, Sink};
 use futures::sync::mpsc::*;
 
-use errors::ChaseError;
+use crate::errors::ChaseError;
 
 impl Chaser {
     /// Consume the given Chaser and returns a Stream from which you can

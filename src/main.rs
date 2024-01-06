@@ -22,7 +22,7 @@ fn main() {
     }
 }
 
-fn inner_main() -> Result<(), Box<Error>> {
+fn inner_main() -> Result<(), Box<dyn Error>> {
     let app = App::new("chase")
         .version(crate_version!())
         .author("Lloyd (github.com/lloydmeta)")
