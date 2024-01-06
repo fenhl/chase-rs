@@ -10,16 +10,13 @@ pub(crate) const DEFAULT_ROTATION_CHECK_WAIT_MILLIS: u64 = 100;
 pub(crate) const DEFAULT_NOT_ROTATED_WAIT_MILLIS: u64 = 50;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub struct Line(pub usize);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub(crate) struct Pos(pub(crate) u64);
 
 #[cfg(unix)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub(crate) struct FileId(pub(crate) u64);
 
 #[cfg(windows)]
@@ -27,7 +24,6 @@ pub(crate) struct FileId(pub(crate) u64);
 pub(crate) struct FileId(pub(crate) FILE_ID_INFO);
 
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub struct Chaser {
     pub line: Line,
     pub(crate) path: PathBuf,

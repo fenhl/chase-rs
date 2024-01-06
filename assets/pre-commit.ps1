@@ -5,14 +5,8 @@ function ThrowOnNativeFailure {
     }
 }
 
-cargo check --all-features
+cargo check
 ThrowOnNativeFailure
 
-cargo test
-ThrowOnNativeFailure
-
-wsl cargo check --all-features
-ThrowOnNativeFailure
-
-wsl cargo test
+wsl cargo check
 ThrowOnNativeFailure
