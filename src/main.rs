@@ -1,4 +1,3 @@
-extern crate chase;
 #[macro_use]
 extern crate clap;
 

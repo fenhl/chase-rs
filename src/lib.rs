@@ -109,16 +109,6 @@
 //! # }
 //! ```
 //!
-extern crate thiserror;
-
-#[cfg(windows)]
-extern crate windows;
-
-#[cfg(feature = "stream")]
-extern crate futures;
-
-#[cfg(test)]
-extern crate tempdir;
 
 mod data;
 mod sync;

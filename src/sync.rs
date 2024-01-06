@@ -125,7 +125,7 @@ impl Chaser {
     }
 }
 
-fn chase<F>(running: &mut Chasing, f: &mut F, grabbing_remainder: bool) -> Result<(), ChaseError>
+fn chase<F>(running: &mut Chasing<'_>, f: &mut F, grabbing_remainder: bool) -> Result<(), ChaseError>
 where
     F: FnMut(&str, Line, Pos) -> Result<Control, ChaseError>,
 {
@@ -182,7 +182,7 @@ where
     Ok(())
 }
 
-fn check_rotation_status(running: &mut Chasing) -> Result<RotationStatus, io::Error> {
+fn check_rotation_status(running: &mut Chasing<'_>) -> Result<RotationStatus, io::Error> {
     let file = File::open(&running.chaser.path)?;
     let file_id = get_file_id(&file)?;
     if file_id != running.file_id {
