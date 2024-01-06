@@ -1,7 +1,6 @@
 //! Holds a synchronous implementation of file following.
 
 use crate::data::*;
-use crate::control::*;
 
 use std::io::{self, BufReader, SeekFrom};
 use std::io::prelude::*;
@@ -34,7 +33,7 @@ use std::os::unix::fs::MetadataExt;
 impl Chaser {
     pub(crate) fn run<F>(&mut self, mut f: F) -> Result<(), crate::Error>
     where
-        F: FnMut(&str) -> Result<Control, crate::Error>,
+        F: FnMut(&str) -> Result<(), crate::Error>,
     {
         let (file, file_id) = {
             let attempts = self.initial_no_file_attempts;
@@ -81,18 +80,13 @@ impl Chaser {
 
 fn chase<F>(running: &mut Chasing<'_>, f: &mut F, grabbing_remainder: bool) -> Result<(), crate::Error>
 where
-    F: FnMut(&str) -> Result<Control, crate::Error>,
+    F: FnMut(&str) -> Result<(), crate::Error>,
 {
     'reading: loop {
         'read_to_eof: loop {
             let bytes_read = running.reader.read_line(&mut running.buffer)?;
             if bytes_read > 0 {
-                let control = f(
-                    running.buffer.trim_end_matches('\n'),
-                )?;
-                if control == Control::Stop {
-                    break 'reading;
-                }
+                f(running.buffer.trim_end_matches('\n'))?;
                 running.buffer.clear();
                 running.line.0 += 1;
                 running.pos.0 += bytes_read as u64;

@@ -11,10 +11,7 @@ use {
         Sink,
         sync::mpsc::*,
     },
-    crate::{
-        data::*,
-        control::*,
-    },
+    crate::data::*,
 };
 
 fn thread_namer(path: &PathBuf) -> String {
@@ -36,7 +33,7 @@ impl Chaser {
                 self.run(|line| {
                     let next_tx = tx.clone().send(line.to_string()).wait()?;
                     tx = next_tx;
-                    Ok(Control::Continue)
+                    Ok(())
                 })?;
                 Ok(())
             })?;
