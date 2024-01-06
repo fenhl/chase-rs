@@ -33,54 +33,9 @@ use std::os::unix::fs::MetadataExt;
 };
 
 impl Chaser {
-    /// Start chasing a file synchronously.
-    ///
-    /// The provided callback function will be invoked whenever a line
-    /// is read.
-    ///
-    /// ```
-    /// # extern crate chase;
-    /// # extern crate tempdir;
-    /// # use chase::*;
-    /// # use tempdir::*;
-    /// # use std::io::Write;
-    /// # use std::fs::OpenOptions;
-    /// # fn main () {
-    /// let temp_dir = TempDir::new("chase-test-sync-docs").unwrap();
-    /// let file_path = temp_dir.path().join("test.log");
-    /// let mut chaser = Chaser::new(&file_path);
-    ///
-    /// let mut file_write = OpenOptions::new()
-    ///   .write(true)
-    ///   .append(true)
-    ///   .create(true)
-    ///   .open(&file_path)
-    ///   .unwrap();
-    ///
-    /// write!(file_write, "Hello, world 1\n").unwrap();
-    /// write!(file_write, "Hello, world 2\n").unwrap();
-    /// write!(file_write, "Hello, world 3\n").unwrap();
-    ///
-    /// let mut seen = Vec::with_capacity(3);
-    ///
-    /// // This is a synchronous loop; so we need to exit manually
-    /// chaser.run(|line, _, _| {
-    ///     seen.push(line.to_string());
-    ///     if seen.len() < 3 {
-    ///         Ok(Control::Continue)
-    ///     } else {
-    ///         Ok(Control::Stop)
-    ///     }
-    /// }).unwrap();
-    ///
-    /// assert_eq!(seen, vec!["Hello, world 1".to_string(), "Hello, world 2".to_string(), "Hello, world 3".to_string()]);
-    /// drop(file_write);
-    /// temp_dir.close().unwrap();
-    /// # }
-    /// ```
-    pub fn run<F>(&mut self, mut f: F) -> Result<(), ChaseError>
+    pub(crate) fn run<F>(&mut self, mut f: F) -> Result<(), ChaseError>
     where
-        F: FnMut(&str, Line, Pos) -> Result<Control, ChaseError>,
+        F: FnMut(&str) -> Result<Control, ChaseError>,
     {
         let (file, file_id) = {
             let attempts = self.initial_no_file_attempts;
@@ -127,7 +82,7 @@ impl Chaser {
 
 fn chase<F>(running: &mut Chasing<'_>, f: &mut F, grabbing_remainder: bool) -> Result<(), ChaseError>
 where
-    F: FnMut(&str, Line, Pos) -> Result<Control, ChaseError>,
+    F: FnMut(&str) -> Result<Control, ChaseError>,
 {
     'reading: loop {
         'read_to_eof: loop {
@@ -135,8 +90,6 @@ where
             if bytes_read > 0 {
                 let control = f(
                     running.buffer.trim_end_matches('\n'),
-                    running.line,
-                    running.pos,
                 )?;
                 if control == Control::Stop {
                     break 'reading;
@@ -245,91 +198,4 @@ fn get_file_id(file: &File) -> Result<FileId, io::Error> {
 enum RotationStatus {
     Rotated { file: File, file_id: FileId },
     NotRotated,
-}
-
-#[cfg(test)]
-mod tests {
-
-    use crate::sync::try_until;
-    use crate::data::*;
-    use crate::control::*;
-    use tempdir::*;
-    use std::io::Write;
-
-    use std::fs::OpenOptions;
-
-    #[test]
-    fn try_until_test() {
-        let result_0: Result<i32, ()> = try_until(|| Ok(1), None, None);
-        assert_eq!(result_0, Ok(1));
-        let result_1: Result<i32, ()> = try_until(|| Ok(1), Some(1), None);
-        assert_eq!(result_1, Ok(1));
-        let mut tries = 0;
-        let result_2: Result<i32, ()> = try_until(
-            || {
-                tries += 1;
-                Err(())
-            },
-            Some(1),
-            None,
-        );
-        assert_eq!(tries, 1);
-        assert_eq!(result_2, Err(()));
-        let result_3: Result<i32, ()> = try_until(
-            || {
-                tries += 1;
-                if tries < 1000 {
-                    Err(())
-                } else {
-                    Ok(1)
-                }
-            },
-            Some(999),
-            None,
-        );
-        assert_eq!(result_3, Ok(1));
-    }
-
-    #[test]
-    fn run_channel_test() {
-        let temp_dir = TempDir::new("chase-test-sync").unwrap();
-        let file_path = temp_dir.path().join("test.log");
-        let mut chaser = Chaser::new(&file_path);
-
-        let mut file_write = OpenOptions::new()
-            .write(true)
-            .append(true)
-            .create(true)
-            .open(&file_path)
-            .unwrap();
-
-        write!(file_write, "Hello, world 1\n").unwrap();
-        write!(file_write, "Hello, world 2\n").unwrap();
-        write!(file_write, "Hello, world 3\n").unwrap();
-
-        let mut seen = Vec::with_capacity(3);
-
-        // This is a synchronous loop; so we need to exit manually
-        chaser
-            .run(|line, _, _| {
-                seen.push(line.to_string());
-                if seen.len() < 3 {
-                    Ok(Control::Continue)
-                } else {
-                    Ok(Control::Stop)
-                }
-            })
-            .unwrap();
-
-        assert_eq!(
-            seen,
-            vec![
-                "Hello, world 1".to_string(),
-                "Hello, world 2".to_string(),
-                "Hello, world 3".to_string(),
-            ]
-        );
-        drop(file_write);
-        temp_dir.close().unwrap();
-    }
 }

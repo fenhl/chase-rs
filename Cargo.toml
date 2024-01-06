@@ -15,35 +15,15 @@ edition = "2021"
 [lints.rust]
 rust_2018_idioms = "deny"
 unused = "deny"
+unused_crate_dependencies = "deny"
 unused_import_braces = "deny"
 unused_lifetimes = "deny"
 unused_qualifications = "deny"
 warnings = "deny"
 
-[[bin]]
-name = "chase"
-path = "src/main.rs"
-required-features = ["binary"]
-
 [dependencies]
-futures = { version = "0.1", optional = true }
-clap = { version = "2.30", optional = true }
-serde = { version = "^1.0", optional = true }
-serde_derive = { version = "^1.0", optional = true }
+futures = "0.1"
 thiserror = "1.0.56"
-
-[dev-dependencies]
-tempdir = "0.3"
-
-[features]
-binary = ["clap"]
-stream = ["futures"]
-with-serde = ["serde", "serde_derive"]
 
 [target."cfg(windows)".dependencies]
 windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
-
-[package.metadata.docs.rs]
-features = ["binary", "stream", "with-serde"]
-all-features = true
-no-default-features = true
