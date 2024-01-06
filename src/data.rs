@@ -6,8 +6,8 @@ use std::path::PathBuf;
 
 #[cfg(windows)] use windows::Win32::Storage::FileSystem::FILE_ID_INFO;
 
-pub(crate) const DEFAULT_ROTATION_CHECK_WAIT_MILLIS: u64 = 100;
-pub(crate) const DEFAULT_NOT_ROTATED_WAIT_MILLIS: u64 = 50;
+pub(crate) const DEFAULT_ROTATION_CHECK_WAIT: Duration = Duration::from_millis(100);
+pub(crate) const DEFAULT_NOT_ROTATED_WAIT: Duration = Duration::from_millis(50);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Line(pub usize);
@@ -50,10 +50,10 @@ impl Chaser {
             line: Line(0),
             path: path.into(),
             initial_no_file_attempts: None,
-            initial_no_file_wait: Duration::from_millis(DEFAULT_ROTATION_CHECK_WAIT_MILLIS),
+            initial_no_file_wait: DEFAULT_ROTATION_CHECK_WAIT,
             rotation_check_attempts: None,
-            rotation_check_wait: Duration::from_millis(DEFAULT_ROTATION_CHECK_WAIT_MILLIS),
-            not_rotated_wait: Duration::from_millis(DEFAULT_NOT_ROTATED_WAIT_MILLIS),
+            rotation_check_wait: DEFAULT_ROTATION_CHECK_WAIT,
+            not_rotated_wait: DEFAULT_NOT_ROTATED_WAIT,
         }
     }
 }
