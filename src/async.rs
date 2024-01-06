@@ -14,7 +14,6 @@ use {
     crate::{
         data::*,
         control::*,
-        errors::ChaseError,
     },
 };
 
@@ -28,7 +27,7 @@ fn thread_namer(path: &PathBuf) -> String {
 impl Chaser {
     pub fn run_stream(
         mut self,
-    ) -> Result<(Receiver<String>, JoinHandle<Result<(), ChaseError>>), ChaseError> {
+    ) -> Result<(Receiver<String>, JoinHandle<Result<(), crate::Error>>), crate::Error> {
         let (mut tx, rx) = channel(0);
 
         let join_handle = Builder::new()

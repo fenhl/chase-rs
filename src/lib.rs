@@ -3,7 +3,7 @@ pub use crate::{
         Chaser,
         Line,
     },
-    errors::ChaseError,
+    errors::Error,
 };
 
 mod r#async;

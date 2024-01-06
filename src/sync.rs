@@ -2,7 +2,6 @@
 
 use crate::data::*;
 use crate::control::*;
-use crate::errors::ChaseError;
 
 use std::io::{self, BufReader, SeekFrom};
 use std::io::prelude::*;
@@ -33,14 +32,14 @@ use std::os::unix::fs::MetadataExt;
 };
 
 impl Chaser {
-    pub(crate) fn run<F>(&mut self, mut f: F) -> Result<(), ChaseError>
+    pub(crate) fn run<F>(&mut self, mut f: F) -> Result<(), crate::Error>
     where
-        F: FnMut(&str) -> Result<Control, ChaseError>,
+        F: FnMut(&str) -> Result<Control, crate::Error>,
     {
         let (file, file_id) = {
             let attempts = self.initial_no_file_attempts;
             let wait = self.initial_no_file_wait;
-            try_until::<_, ChaseError, _>(
+            try_until::<_, crate::Error, _>(
                 || {
                     let file = File::open(&self.path)?;
                     let file_id = get_file_id(&file)?;
@@ -80,9 +79,9 @@ impl Chaser {
     }
 }
 
-fn chase<F>(running: &mut Chasing<'_>, f: &mut F, grabbing_remainder: bool) -> Result<(), ChaseError>
+fn chase<F>(running: &mut Chasing<'_>, f: &mut F, grabbing_remainder: bool) -> Result<(), crate::Error>
 where
-    F: FnMut(&str) -> Result<Control, ChaseError>,
+    F: FnMut(&str) -> Result<Control, crate::Error>,
 {
     'reading: loop {
         'read_to_eof: loop {
