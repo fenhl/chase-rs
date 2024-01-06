@@ -6,11 +6,7 @@ use {
             JoinHandle,
         },
     },
-    futures::{
-        Future,
-        Sink,
-        sync::mpsc::*,
-    },
+    tokio::sync::mpsc::*,
     crate::data::*,
 };
 
@@ -25,14 +21,13 @@ impl Chaser {
     pub fn run_stream(
         mut self,
     ) -> Result<(Receiver<String>, JoinHandle<Result<(), crate::Error>>), crate::Error> {
-        let (mut tx, rx) = channel(0);
+        let (tx, rx) = channel(1);
 
         let join_handle = Builder::new()
             .name(thread_namer(&self.path))
             .spawn(move || {
                 self.run(|line| {
-                    let next_tx = tx.clone().send(line.to_string()).wait()?;
-                    tx = next_tx;
+                    tx.blocking_send(line.to_string())?;
                     Ok(())
                 })?;
                 Ok(())

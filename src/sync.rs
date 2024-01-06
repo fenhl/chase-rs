@@ -2,15 +2,18 @@
 
 use crate::data::*;
 
-use std::io::{self, BufReader, SeekFrom};
-use std::io::prelude::*;
-use std::fs::File;
-use std::thread::sleep;
-use std::time::Duration;
-
-#[cfg(unix)]
-use std::os::unix::fs::MetadataExt;
-
+use std::{
+    fs::File,
+    io::{
+        self,
+        BufReader,
+        SeekFrom,
+        prelude::*,
+    },
+    thread::sleep,
+    time::Duration,
+};
+#[cfg(unix)] use std::os::unix::fs::MetadataExt;
 #[cfg(windows)] use {
     std::{
         ffi::c_void,
