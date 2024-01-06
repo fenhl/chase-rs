@@ -13,6 +13,7 @@ use {
             AsyncSeekExt as _,
             BufReader,
         },
+        sync::mpsc,
         time::sleep,
     },
     wheel::fs::File,
@@ -86,7 +87,23 @@ impl Chaser {
         }
     }
 
-    pub async fn run(&mut self, mut f: impl FnMut(&str) -> Result<(), Error> + Send) -> Result<(), Error> {
+    pub fn run(mut self) -> mpsc::Receiver<Result<String, Error>> {
+        let (tx, rx) = mpsc::channel(1);
+        tokio::spawn(async move {
+            match self.run_inner(|line| {
+                let line = line.to_owned();
+                async {
+                    tx.send(Ok(line)).await.is_ok()
+                }
+            }).await {
+                Ok(()) => {}
+                Err(e) => { let _ = tx.send(Err(e)).await; }
+            }
+        });
+        rx
+    }
+
+    async fn run_inner<Fut: Future<Output = bool> + Send>(&mut self, mut f: impl FnMut(&str) -> Fut + Send) -> Result<(), Error> {
         let (file, file_id) = try_until_success::<_, Error, _>(|| async {
             let file = File::open(&self.path).await?;
             let file_id = get_file_id(&file).await?;
@@ -122,24 +139,26 @@ impl Chaser {
     }
 }
 
-fn chase<'a, 'b: 'a, 'c: 'a, 'd: 'a>(running: &'b mut Chasing<'c>, f: &'d mut (impl FnMut(&str) -> Result<(), Error> + Send), grabbing_remainder: bool) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> {
+fn chase<'a, 'b: 'a, 'c: 'a, 'd: 'a, Fut: Future<Output = bool> + Send>(running: &'b mut Chasing<'c>, f: &'d mut (impl FnMut(&str) -> Fut + Send), grabbing_remainder: bool) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> {
     Box::pin(async move {
         'reading: loop {
             'read_to_eof: loop {
                 let bytes_read = running.reader.read_line(&mut running.buffer).await?;
                 if bytes_read > 0 {
-                    f(running.buffer.trim_end_matches('\n'))?;
+                    if !f(running.buffer.trim_end_matches('\n')).await {
+                        return Ok(())
+                    }
                     running.buffer.clear();
                     running.line.0 += 1;
                     running.pos.0 += bytes_read as u64;
                     running.reader.seek(SeekFrom::Start(running.pos.0)).await?;
                 } else {
-                    break 'read_to_eof; // no bytes read -> EOF
+                    break 'read_to_eof // no bytes read -> EOF
                 }
             }
 
             if grabbing_remainder {
-                break 'reading;
+                break 'reading
             } else {
                 let rotation_status = try_until_success(|| check_rotation_status(running)).await;
                 match rotation_status {
@@ -154,11 +173,11 @@ fn chase<'a, 'b: 'a, 'c: 'a, 'd: 'a>(running: &'b mut Chasing<'c>, f: &'d mut (i
                         running.pos = Pos(0);
                         running.file_id = new_file_id;
                         running.reader = BufReader::new(new_file);
-                        continue 'reading;
+                        continue 'reading
                     }
                     RotationStatus::NotRotated => {
                         sleep(DEFAULT_NOT_ROTATED_WAIT).await;
-                        continue 'reading;
+                        continue 'reading
                     }
                 }
             }
