@@ -39,16 +39,14 @@ impl Chaser {
         F: FnMut(&str) -> Result<(), crate::Error>,
     {
         let (file, file_id) = {
-            let attempts = self.initial_no_file_attempts;
-            let wait = self.initial_no_file_wait;
             try_until::<_, crate::Error, _>(
                 || {
                     let file = File::open(&self.path)?;
                     let file_id = get_file_id(&file)?;
                     Ok((file, file_id))
                 },
-                attempts,
-                Some(wait),
+                None,
+                Some(DEFAULT_ROTATION_CHECK_WAIT),
             )?
         };
         // Create a BufReader and skip to the proper line number while
@@ -102,11 +100,7 @@ where
         if grabbing_remainder {
             break 'reading;
         } else {
-            let rotation_status = {
-                let attempts = running.chaser.rotation_check_attempts;
-                let wait = running.chaser.rotation_check_wait;
-                try_until(|| check_rotation_status(running), attempts, Some(wait))?
-            };
+            let rotation_status = try_until(|| check_rotation_status(running), None, Some(DEFAULT_ROTATION_CHECK_WAIT))?;
             match rotation_status {
                 RotationStatus::Rotated {
                     file: new_file,
@@ -122,7 +116,7 @@ where
                     continue 'reading;
                 }
                 RotationStatus::NotRotated => {
-                    sleep(running.chaser.not_rotated_wait);
+                    sleep(DEFAULT_NOT_ROTATED_WAIT);
                     continue 'reading;
                 }
             }

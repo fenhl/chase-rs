@@ -25,13 +25,8 @@ pub(crate) struct FileId(pub(crate) FILE_ID_INFO);
 
 #[derive(Debug, Clone)]
 pub struct Chaser {
-    pub line: Line,
+    pub(crate) line: Line,
     pub(crate) path: PathBuf,
-    pub(crate) initial_no_file_wait: Duration,
-    pub(crate) initial_no_file_attempts: Option<usize>,
-    pub(crate) rotation_check_wait: Duration,
-    pub(crate) rotation_check_attempts: Option<usize>,
-    pub(crate) not_rotated_wait: Duration,
 }
 
 #[derive(Debug)]
@@ -45,15 +40,10 @@ pub(crate) struct Chasing<'a> {
 }
 
 impl Chaser {
-    pub fn new(path: impl Into<PathBuf>) -> Chaser {
-        Chaser {
-            line: Line(0),
+    pub fn new(path: impl Into<PathBuf>, line: Line) -> Self {
+        Self {
             path: path.into(),
-            initial_no_file_attempts: None,
-            initial_no_file_wait: DEFAULT_ROTATION_CHECK_WAIT,
-            rotation_check_attempts: None,
-            rotation_check_wait: DEFAULT_ROTATION_CHECK_WAIT,
-            not_rotated_wait: DEFAULT_NOT_ROTATED_WAIT,
+            line,
         }
     }
 }
